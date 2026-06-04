@@ -1,0 +1,36 @@
+name: Bug report
+description: Report LLM output that extracts incorrectly
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for the report. A minimal model-output fixture makes a bug fixable.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Which version of json-from-llm?
+      placeholder: 0.1.1
+    validations:
+      required: true
+  - type: textarea
+    id: input
+    attributes:
+      label: Model output
+      description: The smallest response text that reproduces the issue.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: options
+    attributes:
+      label: Options
+      description: Options passed to extractJson/tryExtractJson, if any.
+      render: json
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs actual
+      description: What JSON you expected, and what was returned or thrown instead.
+    validations:
+      required: true

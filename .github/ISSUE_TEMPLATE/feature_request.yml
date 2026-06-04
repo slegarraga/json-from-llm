@@ -1,0 +1,21 @@
+name: Feature request
+description: Suggest a wrapper, repair, or extraction behaviour to support
+labels: ['enhancement']
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Describe the model output shape and why it matters.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What should the extraction behaviour look like?
+  - type: textarea
+    id: examples
+    attributes:
+      label: Examples
+      description: Minimal model outputs and expected JSON values.

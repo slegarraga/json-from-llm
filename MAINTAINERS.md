@@ -17,4 +17,3 @@
 LLM responses wrapped in reasoning tags, markdown fences or prose. The primary
 maintainer controls the GitHub repository, npm package, release tags and
 security policy.
-

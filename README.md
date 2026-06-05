@@ -9,6 +9,9 @@
 
 > Extract valid JSON from an LLM response — even when it's wrapped in reasoning/thinking tags, markdown fences or prose. **Zero dependencies.**
 
+Security posture is tracked in [docs/security-posture.md](./docs/security-posture.md),
+including CodeQL, OpenSSF Scorecard, Dependabot and branch rules.
+
 You asked for JSON. The model gave you:
 
 ````text
@@ -36,6 +39,7 @@ const data = extractJson<{ score: number }>(modelOutput);
 - **Handles the real wrappers.** Markdown fences (`json` and bare ```), conversational prose before/after, and the JSON sitting bare in the text.
 - **String-aware, never corrupts.** The scanner and the trailing-comma repair both respect string contents — a `}` or `,` inside `"a string value"` is left alone.
 - **Conservative repair.** Removes trailing commas (the most common malformation); it will never rewrite your data.
+- **Fixture-backed edge cases.** Public fixtures cover reasoning tags, fenced JSON, prose wrappers, trailing commas, top-level type expectations and no-JSON failures.
 - **Two entry points.** `extractJson` throws on failure; `tryExtractJson` returns `{ found }`.
 - **Zero dependencies**, ESM + CJS, fully typed.
 
@@ -78,6 +82,21 @@ extractJson('[1,2] then the answer {"a":1}', { expect: 'object' }); // { a: 1 }
 4. If parsing fails, apply conservative repair (trailing commas) and retry.
 
 The low-level pieces (`stripReasoning`, `fencedBlocks`, `balancedSpans`, `removeTrailingCommas`) are exported too.
+
+## Fixture corpus
+
+The package includes a small public corpus under [`fixtures/`](./fixtures):
+
+- `deepseek-thinking-object.txt`
+- `gemini-reasoning-array.txt`
+- `prose-trailing-commas.txt`
+- `expect-object-skips-array.txt`
+- `no-json.txt`
+- expected `tryExtractJson` outputs under `fixtures/expected/`
+
+The tests read these files directly, so parser changes are checked against
+stable, reusable examples. The fixtures are synthetic and safe for public CI:
+they contain no prompts, secrets, user data or live provider responses.
 
 ## Related
 

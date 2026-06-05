@@ -1,0 +1,8 @@
+Sure — I normalized the provider names below.
+
+{
+  "providers": ["openai", "anthropic", "gemini",],
+  "ok": true,
+}
+
+Let me know if you want CSV too.

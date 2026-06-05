@@ -40,7 +40,7 @@ const data = extractJson<{ score: number }>(modelOutput);
 - **String-aware, never corrupts.** The scanner and the trailing-comma repair both respect string contents — a `}` or `,` inside `"a string value"` is left alone.
 - **Conservative repair.** Removes trailing commas (the most common malformation); it will never rewrite your data.
 - **Fixture-backed edge cases.** Public fixtures cover reasoning tags, fenced JSON, prose wrappers, trailing commas, top-level type expectations and no-JSON failures.
-- **Two entry points.** `extractJson` throws on failure; `tryExtractJson` returns `{ found }`.
+- **Two library entry points + CLI.** `extractJson` throws on failure; `tryExtractJson` returns `{ found }`; `json-from-llm` reads stdin for shell pipelines.
 - **Zero dependencies**, ESM + CJS, fully typed.
 
 ## Install
@@ -48,6 +48,39 @@ const data = extractJson<{ score: number }>(modelOutput);
 ```sh
 npm install json-from-llm
 ```
+
+## CLI
+
+Pipe model output directly into the binary:
+
+```sh
+cat response.txt | npx json-from-llm
+```
+
+Example:
+
+````sh
+printf '%s\n' '<think>{draft: true}</think>```json
+{"score":8,"reason":"clear"}
+```' | npx json-from-llm
+# {"score":8,"reason":"clear"}
+````
+
+Useful flags:
+
+```sh
+# Skip an earlier array and require the first object that parses
+cat response.txt | npx json-from-llm --expect object
+
+# Disable trailing-comma repair when you want strict parsing
+cat response.txt | npx json-from-llm --no-repair
+```
+
+Exit codes:
+
+- `0` — JSON extracted and printed to stdout.
+- `1` — no matching JSON value found.
+- `2` — invalid CLI options.
 
 ## API
 

@@ -1,0 +1,12 @@
+<reasoning>
+Need to rank the candidates. The scratch list [bad, draft] is only prose.
+</reasoning>
+
+Here is the JSON:
+
+```json
+[
+  { "id": "alpha", "score": 0.91 },
+  { "id": "beta", "score": 0.72 }
+]
+```

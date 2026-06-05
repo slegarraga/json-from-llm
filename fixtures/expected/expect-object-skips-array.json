@@ -1,0 +1,8 @@
+{
+  "found": true,
+  "expect": "object",
+  "value": {
+    "city": "Santiago",
+    "units": "metric"
+  }
+}

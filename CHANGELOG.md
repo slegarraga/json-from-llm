@@ -4,6 +4,18 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2026-06-05
+
+### Added
+
+- Added a public reasoning-output fixture corpus covering `<think>` /
+  `<reasoning>` blocks, fenced JSON, prose wrappers, trailing commas, type
+  expectations and no-JSON failures.
+- Added tests that read the published fixture corpus and verify `tryExtractJson`
+  results.
+- Published the `fixtures/` directory in the npm package for downstream parser
+  and agent-loop tests.
+
 ## [0.1.2] - 2026-06-04
 
 ### Changed

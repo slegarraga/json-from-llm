@@ -1,0 +1,8 @@
+{
+  "found": true,
+  "expect": "array",
+  "value": [
+    { "id": "alpha", "score": 0.91 },
+    { "id": "beta", "score": 0.72 }
+  ]
+}

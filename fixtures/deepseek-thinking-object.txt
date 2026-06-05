@@ -1,0 +1,13 @@
+<think>
+The user asked for a risk score. I might draft {score: maybe 6}, but that is
+not JSON and should not be selected.
+</think>
+
+Final answer:
+```json
+{
+  "score": 8,
+  "reason": "clear evidence",
+  "tags": ["portable", "safe"]
+}
+```

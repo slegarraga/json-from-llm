@@ -1,0 +1,7 @@
+First, a quick list: ["draft", "ignore"].
+
+The object you asked for:
+{
+  "city": "Santiago",
+  "units": "metric"
+}

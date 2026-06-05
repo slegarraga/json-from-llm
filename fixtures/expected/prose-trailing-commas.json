@@ -1,0 +1,8 @@
+{
+  "found": true,
+  "expect": "object",
+  "value": {
+    "providers": ["openai", "anthropic", "gemini"],
+    "ok": true
+  }
+}

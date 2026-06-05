@@ -1,0 +1,9 @@
+{
+  "found": true,
+  "expect": "object",
+  "value": {
+    "score": 8,
+    "reason": "clear evidence",
+    "tags": ["portable", "safe"]
+  }
+}

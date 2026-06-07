@@ -1,0 +1,11 @@
+Here is the JSON you requested:
+
+```json
+{
+  "provider": "openai",
+  "classification": {
+    "label": "ship",
+    "confidence": 0.92
+  }
+}
+```

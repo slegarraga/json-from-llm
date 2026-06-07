@@ -3,11 +3,24 @@
  * Qwen, and prompted Claude/Gemini setups) emit `<think>…</think>` or
  * `<thinking>…</thinking>` before the answer, and that text frequently contains
  * brace-laden prose that would otherwise be mistaken for the payload.
+ *
+ * If a reasoning tag is opened but not closed, treat the rest of the text as
+ * reasoning. Returning no JSON is safer than extracting a valid-looking draft.
  */
-const REASONING_TAGS = /<(think|thinking|reasoning|thought)>[\s\S]*?<\/\1>/gi;
+const CLOSED_REASONING_BLOCK =
+  /<(think|thinking|reasoning|thought)\b[^>]*>[\s\S]*?<\/\1>/gi;
+const OPEN_REASONING_TAG = /<(think|thinking|reasoning|thought)\b[^>]*>/gi;
 
 export function stripReasoning(text: string): string {
-  return text.replace(REASONING_TAGS, '');
+  const withoutClosedBlocks = text.replace(CLOSED_REASONING_BLOCK, '');
+  OPEN_REASONING_TAG.lastIndex = 0;
+  const unclosed = OPEN_REASONING_TAG.exec(withoutClosedBlocks);
+
+  if (!unclosed) {
+    return withoutClosedBlocks;
+  }
+
+  return withoutClosedBlocks.slice(0, unclosed.index);
 }
 
 /**

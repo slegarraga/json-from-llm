@@ -1,0 +1,11 @@
+The first fenced block is a draft note, not the payload.
+
+```json
+The draft object was {"score": 4, "draft": true}, but do not use it.
+```
+
+Final JSON:
+
+```json
+{"score":8,"draft":false}
+```

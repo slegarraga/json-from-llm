@@ -64,8 +64,10 @@ export function tryExtractJson<T = unknown>(
   // Candidate substrings, highest confidence first: fenced blocks (and any
   // balanced values inside them), then balanced values anywhere in the text.
   const candidates: string[] = [];
-  for (const block of fencedBlocks(cleaned)) {
-    candidates.push(block, ...balancedSpans(block));
+  const blocks = fencedBlocks(cleaned);
+  candidates.push(...blocks);
+  for (const block of blocks) {
+    candidates.push(...balancedSpans(block));
   }
   candidates.push(...balancedSpans(cleaned));
 

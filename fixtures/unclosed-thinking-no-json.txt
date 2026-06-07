@@ -1,0 +1,3 @@
+<thinking>
+{"draft": true, "score": 4}
+Still reasoning; no final answer was emitted.

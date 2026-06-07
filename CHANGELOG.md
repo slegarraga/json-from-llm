@@ -4,6 +4,27 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.2.1] - 2026-06-07
+
+### Added
+
+- Added provider-style fixtures for fenced OpenAI-like output, multiple fenced
+  candidates, Anthropic-like prose wrappers, malformed drafts before final JSON,
+  truncated streams and unclosed reasoning blocks.
+- Added edge-case coverage for BOM/whitespace, escaped braces in strings,
+  deeply nested JSON and partial malformed input.
+
+### Changed
+
+- Made balanced scanning delimiter-aware so mismatched `{` / `]` drafts and
+  truncated JSON-looking containers are skipped as malformed candidates.
+- Prefer complete fenced payloads across all JSON-ish fences before falling back
+  to lower-confidence balanced fragments inside fenced prose.
+- Treat unclosed reasoning tags as reasoning through the end of the text to
+  avoid extracting valid-looking draft JSON.
+
 ## [0.2.0] - 2026-06-05
 
 ### Added

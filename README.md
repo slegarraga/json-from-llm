@@ -35,9 +35,9 @@ const data = extractJson<{ score: number }>(modelOutput);
 
 ## Why
 
-- **Reasoning-model aware.** Strips `<think>` / `<thinking>` blocks first, so brace-laden reasoning (a real cause of `No object generated` failures with DeepSeek R1, Gemini 2.5 thinking, prompted Claude) never gets mistaken for the payload.
+- **Reasoning-model aware.** Strips `<think>` / `<thinking>` blocks first, including unclosed reasoning prefixes, so brace-laden reasoning (a real cause of `No object generated` failures with DeepSeek R1, Gemini 2.5 thinking, prompted Claude) never gets mistaken for the payload.
 - **Handles the real wrappers.** Markdown fences (`json` and bare ```), conversational prose before/after, and the JSON sitting bare in the text.
-- **String-aware, never corrupts.** The scanner and the trailing-comma repair both respect string contents — a `}` or `,` inside `"a string value"` is left alone.
+- **String-aware, delimiter-aware, never corrupts.** The scanner and the trailing-comma repair both respect string contents — a `}` or `,` inside `"a string value"` is left alone, and mismatched or truncated JSON-looking drafts are skipped.
 - **Conservative repair.** Removes trailing commas (the most common malformation); it will never rewrite your data.
 - **Fixture-backed edge cases.** Public fixtures cover reasoning tags, fenced JSON, prose wrappers, trailing commas, top-level type expectations and no-JSON failures.
 - **Two library entry points + CLI.** `extractJson` throws on failure; `tryExtractJson` returns `{ found }`; `json-from-llm` reads stdin for shell pipelines.
@@ -107,14 +107,54 @@ interface ExtractOptions {
 extractJson('[1,2] then the answer {"a":1}', { expect: 'object' }); // { a: 1 }
 ```
 
+### Provider-style snippets
+
+OpenAI-style fenced output:
+
+`````ts
+const value = extractJson<{ score: number }>(
+  `Here is the JSON:
+```json
+{"score":8,"reason":"clear"}
+````,
+  { expect: 'object' },
+);
+`````
+
+Anthropic-style prose around the object:
+
+```ts
+const result = tryExtractJson<{ safe: boolean }>(
+  'I will return the object first.\n{"safe":true}\nLet me know if you need more.',
+  { expect: 'object' },
+);
+```
+
+Gemini-style thinking plus a top-level array:
+
+```ts
+const items = extractJson<Array<{ id: string }>>(
+  '<thinking>{draft: true}</thinking>\n[{"id":"a"}]',
+  { expect: 'array' },
+);
+```
+
 ### Algorithm
 
-1. Strip `<think>` / `<thinking>` / `<reasoning>` blocks.
-2. Prefer the contents of fenced `json (or bare `) code blocks.
-3. Otherwise scan for the first balanced `{…}` / `[…]` that parses, string-aware.
-4. If parsing fails, apply conservative repair (trailing commas) and retry.
+1. Strip `<think>` / `<thinking>` / `<reasoning>` blocks. If a reasoning tag is opened and never closed, treat the rest as reasoning.
+2. Prefer complete contents of fenced `json` (or bare) code blocks.
+3. If a fence contains prose, scan inside those fences for balanced JSON after complete fence payloads have been tried.
+4. Otherwise scan for the first balanced `{…}` / `[…]` that parses, string-aware and delimiter-aware.
+5. If parsing fails, apply conservative repair (trailing commas) and retry.
 
 The low-level pieces (`stripReasoning`, `fencedBlocks`, `balancedSpans`, `removeTrailingCommas`) are exported too.
+
+### Caveats
+
+- TypeScript generics do not validate runtime shape. Pair this with your schema validator when fields matter.
+- Repair is intentionally narrow: trailing commas only. It will not convert JSON5, comments, single quotes or unquoted keys.
+- Candidate order is deterministic: JSON-ish fences first, then balanced objects/arrays in document order, filtered by `expect`.
+- Unclosed reasoning tags return no JSON from that suffix instead of risking a draft extraction.
 
 ## Fixture corpus
 
@@ -122,8 +162,14 @@ The package includes a small public corpus under [`fixtures/`](./fixtures):
 
 - `deepseek-thinking-object.txt`
 - `gemini-reasoning-array.txt`
+- `openai-fenced-object.txt`
+- `multiple-fenced-final.txt`
+- `anthropic-prose-object.txt`
 - `prose-trailing-commas.txt`
+- `malformed-draft-valid-final.txt`
 - `expect-object-skips-array.txt`
+- `truncated-stream-no-json.txt`
+- `unclosed-thinking-no-json.txt`
 - `no-json.txt`
 - expected `tryExtractJson` outputs under `fixtures/expected/`
 

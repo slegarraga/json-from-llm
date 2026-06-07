@@ -1,0 +1,9 @@
+{
+  "found": true,
+  "expect": "object",
+  "value": {
+    "provider": "anthropic",
+    "safe": true,
+    "note": "the literal } character is part of this string"
+  }
+}

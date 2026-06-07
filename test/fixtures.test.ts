@@ -12,8 +12,14 @@ interface ExpectedFixture {
 const fixtureNames = [
   'deepseek-thinking-object',
   'gemini-reasoning-array',
+  'openai-fenced-object',
+  'multiple-fenced-final',
+  'anthropic-prose-object',
   'prose-trailing-commas',
+  'malformed-draft-valid-final',
   'expect-object-skips-array',
+  'truncated-stream-no-json',
+  'unclosed-thinking-no-json',
   'no-json',
 ] as const;
 

@@ -1,7 +1,7 @@
 /**
  * Find the substrings of complete, balanced JSON objects/arrays in `text`,
- * in document order. String-aware: braces and brackets inside JSON strings do
- * not affect nesting, so prose like `"the } char"` won't break the scan.
+ * in document order. String-aware and delimiter-aware: braces and brackets
+ * inside JSON strings do not affect nesting, and `[` must close with `]`.
  */
 export function balancedSpans(text: string): string[] {
   const spans: string[] = [];
@@ -9,21 +9,30 @@ export function balancedSpans(text: string): string[] {
   while (i < text.length) {
     const ch = text[i];
     if (ch === '{' || ch === '[') {
-      const end = matchBalanced(text, i);
-      if (end !== -1) {
-        spans.push(text.slice(i, end));
-        i = end;
+      const match = matchBalanced(text, i);
+      if (match.end !== -1) {
+        spans.push(text.slice(i, match.end));
+        i = match.end;
         continue;
       }
+
+      i = Math.max(match.resume, i + 1);
+      continue;
     }
     i++;
   }
   return spans;
 }
 
-/** Return the index just past the balanced value starting at `start`, or -1. */
-function matchBalanced(text: string, start: number): number {
-  let depth = 0;
+interface MatchResult {
+  /** Index just past the balanced value, or -1 when no complete value exists. */
+  end: number;
+  /** Next scan index after a malformed or incomplete candidate. */
+  resume: number;
+}
+
+function matchBalanced(text: string, start: number): MatchResult {
+  const expectedClosers: string[] = [];
   let inString = false;
   let escaped = false;
 
@@ -43,15 +52,56 @@ function matchBalanced(text: string, start: number): number {
 
     if (ch === '"') {
       inString = true;
-    } else if (ch === '{' || ch === '[') {
-      depth++;
-    } else if (ch === '}' || ch === ']') {
-      depth--;
-      if (depth === 0) {
-        return i + 1;
+      continue;
+    }
+
+    if (ch === '{') {
+      expectedClosers.push('}');
+      continue;
+    }
+
+    if (ch === '[') {
+      expectedClosers.push(']');
+      continue;
+    }
+
+    if (ch === '}' || ch === ']') {
+      if (expectedClosers.pop() !== ch) {
+        return { end: -1, resume: i + 1 };
+      }
+      if (expectedClosers.length === 0) {
+        return { end: i + 1, resume: i + 1 };
       }
     }
   }
 
-  return -1;
+  return {
+    end: -1,
+    resume: looksLikeJsonContainerStart(text, start) ? text.length : start + 1,
+  };
+}
+
+function looksLikeJsonContainerStart(text: string, start: number): boolean {
+  let index = start + 1;
+  while (index < text.length && /\s/.test(text[index])) {
+    index++;
+  }
+
+  const next = text[index];
+  if (text[start] === '{') {
+    return next === '"' || next === '}';
+  }
+
+  return (
+    next === undefined ||
+    next === '[' ||
+    next === '{' ||
+    next === '"' ||
+    next === ']' ||
+    next === '-' ||
+    (next >= '0' && next <= '9') ||
+    next === 't' ||
+    next === 'f' ||
+    next === 'n'
+  );
 }

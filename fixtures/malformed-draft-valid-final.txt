@@ -1,0 +1,7 @@
+Draft:
+
+{score: 7, reason: "rough"}
+
+Final JSON:
+
+{"score":8,"reason":"clear"}

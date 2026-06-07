@@ -1,0 +1,6 @@
+The provider stream ended before the top-level object closed.
+
+```json
+{
+  "items": [
+    { "id": "draft", "score": 4 }

@@ -1,0 +1,9 @@
+I'll return the object first so it is easy to parse.
+
+{
+  "provider": "anthropic",
+  "safe": true,
+  "note": "the literal } character is part of this string"
+}
+
+Let me know if you want the schema too.

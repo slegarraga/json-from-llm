@@ -1,0 +1,8 @@
+{
+  "found": true,
+  "expect": "object",
+  "value": {
+    "score": 8,
+    "draft": false
+  }
+}

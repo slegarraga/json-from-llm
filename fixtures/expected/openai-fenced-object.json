@@ -1,0 +1,11 @@
+{
+  "found": true,
+  "expect": "object",
+  "value": {
+    "provider": "openai",
+    "classification": {
+      "label": "ship",
+      "confidence": 0.92
+    }
+  }
+}

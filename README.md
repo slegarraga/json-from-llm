@@ -1,7 +1,7 @@
 # json-from-llm
 
 [![npm version](https://img.shields.io/npm/v/json-from-llm.svg)](https://www.npmjs.com/package/json-from-llm)
-[![npm downloads](https://img.shields.io/npm/dm/json-from-llm.svg)](https://www.npmjs.com/package/json-from-llm)
+[![npm downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fslegarraga%2Fjson-from-llm%2Fmain%2Fbadges%2Fnpm-downloads%2Fjson-from-llm.json)](https://www.npmjs.com/package/json-from-llm)
 [![CI](https://github.com/slegarraga/json-from-llm/actions/workflows/ci.yml/badge.svg)](https://github.com/slegarraga/json-from-llm/actions/workflows/ci.yml)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/slegarraga/json-from-llm/badge)](https://scorecard.dev/viewer/?uri=github.com/slegarraga/json-from-llm)
 [![license](https://img.shields.io/npm/l/json-from-llm.svg)](./LICENSE)

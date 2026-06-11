@@ -1,6 +1,6 @@
 {
   "name": "json-from-llm",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Extract valid JSON from an LLM response, even when it is wrapped in reasoning/thinking tags, markdown fences or prose. Zero dependencies.",
   "keywords": [
     "llm",

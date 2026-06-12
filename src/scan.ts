@@ -35,6 +35,7 @@ function matchBalanced(text: string, start: number): MatchResult {
   const expectedClosers: string[] = [];
   let inString = false;
   let escaped = false;
+  let sawCloserOrQuote = false;
 
   for (let i = start; i < text.length; i++) {
     const ch = text[i];
@@ -52,6 +53,7 @@ function matchBalanced(text: string, start: number): MatchResult {
 
     if (ch === '"') {
       inString = true;
+      sawCloserOrQuote = true;
       continue;
     }
 
@@ -66,6 +68,7 @@ function matchBalanced(text: string, start: number): MatchResult {
     }
 
     if (ch === '}' || ch === ']') {
+      sawCloserOrQuote = true;
       if (expectedClosers.pop() !== ch) {
         return { end: -1, resume: i + 1 };
       }
@@ -75,9 +78,16 @@ function matchBalanced(text: string, start: number): MatchResult {
     }
   }
 
+  // A balanced span needs a closer, and string state cannot diverge without a
+  // quote — so when the rest of the text has neither, no later start can
+  // succeed. This keeps degenerate runs of openers (a model stuck repeating
+  // `{`) linear instead of rescanning the tail from every position.
   return {
     end: -1,
-    resume: looksLikeJsonContainerStart(text, start) ? text.length : start + 1,
+    resume:
+      !sawCloserOrQuote || looksLikeJsonContainerStart(text, start)
+        ? text.length
+        : start + 1,
   };
 }
 

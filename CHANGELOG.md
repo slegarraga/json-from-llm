@@ -6,6 +6,14 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-06-12
+
+### Fixed
+
+- Scan degenerate runs of opening braces/brackets (a model stuck in a
+  repetition loop) in linear time instead of quadratic, so extraction can no
+  longer stall on such output.
+
 ## [0.2.2] - 2026-06-11
 
 ### Changed

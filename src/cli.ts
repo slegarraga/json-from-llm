@@ -20,8 +20,8 @@ Read LLM output from stdin and print the extracted JSON value to stdout.
 
 Options:
   --expect <type>  Require the top-level JSON value to be object, array or any.
-  --no-repair     Disable conservative trailing-comma repair.
-  -h, --help      Show this help text.
+  --no-repair      Disable conservative trailing-comma repair.
+  -h, --help       Show this help text.
 `;
 
 function parseArgs(args: string[]): CliConfig | string {

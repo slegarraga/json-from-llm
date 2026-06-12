@@ -187,6 +187,15 @@ describe('extractJson — edge cases from LLM output', () => {
     expect(tryExtractJson(text).found).toBe(false);
   });
 
+  it('handles degenerate runs of openers in linear time', () => {
+    // A model stuck in a repetition loop can emit huge runs of `{` — this
+    // must return quickly rather than rescanning the tail from every brace.
+    const started = Date.now();
+    expect(tryExtractJson('{'.repeat(200_000)).found).toBe(false);
+    expect(tryExtractJson('['.repeat(200_000)).found).toBe(false);
+    expect(Date.now() - started).toBeLessThan(2_000);
+  });
+
   it('continues after non-JSON prose with an unmatched brace', () => {
     const text = 'Template note: use {name in copy. Final: {"ok": true}';
 

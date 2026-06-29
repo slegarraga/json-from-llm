@@ -6,6 +6,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.6] - 2026-06-29
+
+### Changed
+
+- Documentation: replace em dashes with standard punctuation for consistent house style.
+
 ## [0.2.5] - 2026-06-29
 
 ### Changed

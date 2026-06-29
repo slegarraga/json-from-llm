@@ -136,7 +136,7 @@ import { extractJson } from 'json-from-llm';
 
 const client = new Anthropic();
 const msg = await client.messages.create({
-  model: 'claude-opus-4-5',
+  model: 'claude-opus-4-8',
   max_tokens: 256,
   messages: [{ role: 'user', content: 'Return {"score":8} as JSON.' }],
 });

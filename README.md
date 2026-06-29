@@ -4,10 +4,12 @@
 [![npm downloads](https://img.shields.io/npm/dm/json-from-llm?logo=npm&label=downloads)](https://www.npmjs.com/package/json-from-llm)
 [![CI](https://github.com/slegarraga/json-from-llm/actions/workflows/ci.yml/badge.svg)](https://github.com/slegarraga/json-from-llm/actions/workflows/ci.yml)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/slegarraga/json-from-llm/badge)](https://scorecard.dev/viewer/?uri=github.com/slegarraga/json-from-llm)
+[![install size](https://packagephobia.com/badge?p=json-from-llm)](https://packagephobia.com/result?p=json-from-llm)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/json-from-llm?label=min%2Bgzip)](https://bundlephobia.com/package/json-from-llm)
 [![license](https://img.shields.io/npm/l/json-from-llm.svg)](./LICENSE)
 [![zero dependencies](https://img.shields.io/badge/dependencies-0-brightgreen.svg)](./package.json)
 
-> Extract valid JSON from an LLM response — even when it's wrapped in reasoning/thinking tags, markdown fences or prose. **Zero dependencies.**
+> Reasoning-aware JSON extractor for LLM responses: strips thinking tags, unwraps markdown fences, and scans prose before `JSON.parse` ever sees the text. Zero dependencies.
 
 Security posture is tracked in [docs/security-posture.md](./docs/security-posture.md),
 including CodeQL, OpenSSF Scorecard, Dependabot and branch rules.
@@ -107,36 +109,87 @@ interface ExtractOptions {
 extractJson('[1,2] then the answer {"a":1}', { expect: 'object' }); // { a: 1 }
 ```
 
-### Provider-style snippets
+### Real provider call sites
 
-OpenAI-style fenced output:
+These are the exact shapes returned by each SDK. Pass the raw string directly to `extractJson`.
 
-`````ts
-const value = extractJson<{ score: number }>(
-  `Here is the JSON:
-```json
-{"score":8,"reason":"clear"}
-````,
-  { expect: 'object' },
-);
-`````
-
-Anthropic-style prose around the object:
+**OpenAI**
 
 ```ts
-const result = tryExtractJson<{ safe: boolean }>(
-  'I will return the object first.\n{"safe":true}\nLet me know if you need more.',
-  { expect: 'object' },
-);
+import OpenAI from 'openai';
+import { extractJson } from 'json-from-llm';
+
+const client = new OpenAI();
+const res = await client.chat.completions.create({
+  model: 'gpt-4o',
+  messages: [{ role: 'user', content: 'Return {"score":8} as JSON.' }],
+});
+const raw = res.choices[0].message.content ?? '';
+const data = extractJson<{ score: number }>(raw);
 ```
 
-Gemini-style thinking plus a top-level array:
+**Anthropic**
 
 ```ts
-const items = extractJson<Array<{ id: string }>>(
-  '<thinking>{draft: true}</thinking>\n[{"id":"a"}]',
-  { expect: 'array' },
-);
+import Anthropic from '@anthropic-ai/sdk';
+import { extractJson } from 'json-from-llm';
+
+const client = new Anthropic();
+const msg = await client.messages.create({
+  model: 'claude-opus-4-5',
+  max_tokens: 256,
+  messages: [{ role: 'user', content: 'Return {"score":8} as JSON.' }],
+});
+const raw = msg.content.find((b) => b.type === 'text')?.text ?? '';
+const data = extractJson<{ score: number }>(raw);
+```
+
+**Vercel AI SDK**
+
+```ts
+import { generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { extractJson } from 'json-from-llm';
+
+const { text } = await generateText({
+  model: openai('gpt-4o'),
+  prompt: 'Return {"score":8} as JSON.',
+});
+const data = extractJson<{ score: number }>(text);
+```
+
+**Streaming (OpenAI)**
+
+```ts
+import OpenAI from 'openai';
+import { extractJson } from 'json-from-llm';
+
+const client = new OpenAI();
+const stream = await client.chat.completions.create({
+  model: 'gpt-4o',
+  stream: true,
+  messages: [{ role: 'user', content: 'Return {"score":8} as JSON.' }],
+});
+let raw = '';
+for await (const chunk of stream) {
+  raw += chunk.choices[0]?.delta?.content ?? '';
+}
+const data = extractJson<{ score: number }>(raw);
+```
+
+**Streaming (Vercel AI SDK)**
+
+```ts
+import { streamText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { extractJson } from 'json-from-llm';
+
+const result = streamText({
+  model: openai('gpt-4o'),
+  prompt: 'Return {"score":8} as JSON.',
+});
+const { text } = await result;
+const data = extractJson<{ score: number }>(text);
 ```
 
 ### Algorithm
@@ -155,6 +208,54 @@ The low-level pieces (`stripReasoning`, `fencedBlocks`, `balancedSpans`, `remove
 - Repair is intentionally narrow: trailing commas only. It will not convert JSON5, comments, single quotes or unquoted keys.
 - Candidate order is deterministic: JSON-ish fences first, then balanced objects/arrays in document order, filtered by `expect`.
 - Unclosed reasoning tags return no JSON from that suffix instead of risking a draft extraction.
+
+## Recipes
+
+### Validate the extracted object with Zod
+
+```ts
+import { z } from 'zod';
+import { extractJson } from 'json-from-llm';
+
+const Schema = z.object({ score: z.number(), reason: z.string() });
+
+const raw = modelOutput; // the raw LLM response string
+const parsed = Schema.parse(extractJson(raw)); // throws ZodError if shape is wrong
+```
+
+TypeScript generics pass through without runtime checking. Zod (or any schema validator) is the right layer for field-level validation.
+
+### Retry loop on extraction failure
+
+```ts
+import { JsonExtractionError, tryExtractJson } from 'json-from-llm';
+
+async function extractWithRetry(
+  call: () => Promise<string>,
+  maxAttempts = 3,
+): Promise<unknown> {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const raw = await call();
+    const result = tryExtractJson(raw);
+    if (result.found) return result.value;
+    if (attempt === maxAttempts) {
+      throw new JsonExtractionError(
+        `No JSON found after ${maxAttempts} attempts`,
+      );
+    }
+    // Re-ask the model on failure
+  }
+  throw new JsonExtractionError('Unreachable');
+}
+```
+
+## Why not X?
+
+**`jsonrepair`**: repairs malformed JSON syntax (unclosed brackets, unquoted keys, comments). It expects the input to already be JSON-shaped. `json-from-llm` solves the step before that: locating which substring is the intended JSON payload inside a mixed reasoning/prose/fenced response. The two are complementary: extract first, then repair if needed.
+
+**`JSON.parse` with a prompt asking for pure JSON**: works often, but reasoning models emit `<think>` blocks unconditionally, and conversational models wrap answers in prose even when instructed not to. `json-from-llm` handles those cases without prompt engineering.
+
+**`structured_outputs` / forced JSON mode**: not all providers support it, not all tasks are compatible with it (e.g., chain-of-thought), and it requires schema registration. `json-from-llm` works on any plain-text completion.
 
 ## Fixture corpus
 
@@ -179,8 +280,10 @@ they contain no prompts, secrets, user data or live provider responses.
 
 ## Related
 
-- [`tool-schema`](https://www.npmjs.com/package/tool-schema) — turn a JSON Schema into a provider tool/function schema (define the shape you then extract).
-- [`llm-sse`](https://www.npmjs.com/package/llm-sse) · [`llm-messages`](https://www.npmjs.com/package/llm-messages) · [`llm-errors`](https://www.npmjs.com/package/llm-errors) — the provider-portability suite.
+- [`tool-schema`](https://www.npmjs.com/package/tool-schema): convert a JSON Schema into a provider tool / function-calling schema for OpenAI, Anthropic, Gemini and MCP
+- [`llm-sse`](https://www.npmjs.com/package/llm-sse): parse streaming SSE from LLM providers into typed, provider-agnostic events
+- [`llm-messages`](https://www.npmjs.com/package/llm-messages): convert chat messages between OpenAI, Anthropic and Gemini formats
+- [`llm-errors`](https://www.npmjs.com/package/llm-errors): normalize provider errors (rate limits, retries, status) into one shape
 
 ## License
 

@@ -39,7 +39,7 @@ const data = extractJson<{ score: number }>(modelOutput);
 
 - **Reasoning-model aware.** Strips `<think>` / `<thinking>` blocks first, including unclosed reasoning prefixes, so brace-laden reasoning (a real cause of `No object generated` failures with DeepSeek R1, Gemini 2.5 thinking, prompted Claude) never gets mistaken for the payload.
 - **Handles the real wrappers.** Markdown fences (`json` and bare ```), conversational prose before/after, and the JSON sitting bare in the text.
-- **String-aware, delimiter-aware, never corrupts.** The scanner and the trailing-comma repair both respect string contents — a `}` or `,` inside `"a string value"` is left alone, and mismatched or truncated JSON-looking drafts are skipped.
+- **String-aware, delimiter-aware, never corrupts.** The scanner and the trailing-comma repair both respect string contents, a `}` or `,` inside `"a string value"` is left alone, and mismatched or truncated JSON-looking drafts are skipped.
 - **Conservative repair.** Removes trailing commas (the most common malformation); it will never rewrite your data.
 - **Fixture-backed edge cases.** Public fixtures cover reasoning tags, fenced JSON, prose wrappers, trailing commas, top-level type expectations and no-JSON failures.
 - **Two library entry points + CLI.** `extractJson` throws on failure; `tryExtractJson` returns `{ found }`; `json-from-llm` reads stdin for shell pipelines.
@@ -80,9 +80,9 @@ cat response.txt | npx json-from-llm --no-repair
 
 Exit codes:
 
-- `0` — JSON extracted and printed to stdout.
-- `1` — no matching JSON value found.
-- `2` — invalid CLI options.
+- `0`: JSON extracted and printed to stdout.
+- `1`: no matching JSON value found.
+- `2`: invalid CLI options.
 
 ## API
 

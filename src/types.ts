@@ -15,8 +15,7 @@ export interface ExtractOptions {
 
 /** The result of {@link tryExtractJson}. */
 export type ExtractResult<T> =
-  | { found: true; value: T }
-  | { found: false; value?: undefined };
+  { found: true; value: T } | { found: false; value?: undefined };
 
 /** Thrown by {@link extractJson} when no JSON value can be recovered. */
 export class JsonExtractionError extends Error {
